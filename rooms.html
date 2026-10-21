@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Rooms & Suites | Borthwen B&B Dolgellau</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- PapaParse Library to read rooms.csv in the browser -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        .font-serif { font-family: 'Playfair Display', Georgia, serif; }
+    </style>
+</head>
+<body class="bg-[#F8F9FA] text-[#0F172A] font-sans antialiased min-h-screen flex flex-col justify-between">
+
+    <!-- Navigation -->
+    <nav class="bg-slate-900 text-white sticky top-0 z-50 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <a href="index.html" class="text-2xl font-serif font-bold tracking-wider">
+                BORTHWEN <span class="text-emerald-400 text-sm font-sans block tracking-widest uppercase">Dolgellau, Wales</span>
+            </a>
+            <div class="hidden md:flex space-x-8 items-center text-sm font-medium">
+                <a href="index.html" class="hover:text-emerald-400 transition">Home</a>
+                <a href="rooms.html" class="text-emerald-400 font-semibold transition">Rooms & Rates</a>
+                <a href="nearby.html" class="hover:text-emerald-400 transition">What's Nearby</a>
+                <a href="reviews.html" class="hover:text-emerald-400 transition">Reviews</a>
+                <a href="contact.html" class="hover:text-emerald-400 transition">Contact</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <header class="bg-slate-900 text-white py-20 px-4">
+        <div class="max-w-4xl mx-auto text-center space-y-4">
+            <h1 class="text-4xl md:text-5xl font-serif font-bold tracking-wide">Our Rooms & Suites</h1>
+            <p class="text-slate-300 max-w-xl mx-auto">
+                Comfortable, elegantly appointed rooms with stunning views of the Mawddach Valley and Cadair Idris.
+            </p>
+        </div>
+    </header>
+
+    <!-- Rooms List Section -->
+    <div class="flex-grow">
+    <main id="rooms-container" class="max-w-7xl mx-auto px-4 py-16 space-y-12">
+        <!-- Loading State -->
+        <div id="loading" class="text-center py-12 text-slate-500">
+            <i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i>
+            <p>Loading rooms...</p>
+        </div>
+    </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 py-12 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8 text-sm">
+            <div>
+                <h3 class="text-white font-serif text-lg mb-3">Borthwen B&B</h3>
+                <p>Cader Road, Dolgellau, Wales, United Kingdom LL40 1SG</p>
+                <p class="mt-2">Phone: +44 792 80 41057</p>
+                <p>Email: borthwenbnb@gmail.com</p>
+            </div>
+            <div>
+                <h3 class="text-white font-serif text-lg mb-3">Quick Links</h3>
+                <ul class="space-y-2">
+                    <li><a href="rooms.html" class="hover:text-white">Our Rooms</a></li>
+                    <li><a href="booking.html" class="hover:text-white">Check Availability</a></li>
+                    <li><a href="nearby.html" class="hover:text-white">Explore Snowdonia</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 mt-8 pt-6 border-t border-slate-800 text-center text-xs">
+            &copy; 2026 Borthwen B&B. All rights reserved.
+        </div>
+    </footer>
+
+    <!-- CSV Loader & Carousel Script -->
+    <script>
+        const slideIndices = {};
+
+        function loadRooms() {
+            Papa.parse('rooms.csv', {
+                download: true,
+                header: true,
+                complete: function(results) {
+                    const container = document.getElementById('rooms-container');
+                    container.innerHTML = ''; // Clear loading spinner
+
+                    results.data.forEach((room, roomLoopIndex) => {
+                        if (!room.id || !room.name) return;
+
+                        const roomIdClean = room.id.trim();
+
+                        // Parse images list from CSV
+                        const imagesList = room.images ? room.images.split(',').map(i => i.trim()).filter(i => i) : [];
+                        
+                        // Description based on room type
+                        const isTwin = room.name.toLowerCase().includes('twin');
+                        const description = isTwin 
+                            ? 'Twin room ideally suited for walkers and friends exploring the Cader Idris trails and Coed y Brenin forests, complete with comfortable single beds and modern amenities.'
+                            : 'Double room ideally suited for couples exploring the Cader Idris trails and Coed y Brenin forests, complete with comfortable single beds and modern amenities.';
+
+                        // Build Carousel Slides HTML
+                        let slidesHtml = '';
+                        let dotsHtml = '';
+
+                        if (imagesList.length > 0) {
+                            imagesList.forEach((img, imgLoopIndex) => {
+                                const isFirst = imgLoopIndex === 0;
+                                slidesHtml += `
+                                    <div class="absolute inset-0 transition-opacity duration-500 ease-in-out carousel-slide-${roomLoopIndex}-${imgLoopIndex} ${isFirst ? 'opacity-100 z-10' : 'opacity-0 z-0'}">
+                                        <img src="static/rooms/${img}" 
+                                             alt="${room.name}" 
+                                             class="w-full h-full object-cover"
+                                             onerror="this.src='static/octopus.png'">
+                                    </div>
+                                `;
+                                dotsHtml += `
+                                    <span class="w-2 h-2 rounded-full bg-white/60 dot-${roomLoopIndex}-${imgLoopIndex} ${isFirst ? 'bg-white w-4' : ''} transition-all"></span>
+                                `;
+                            });
+                        } else {
+                            slidesHtml = `
+                                <div class="absolute inset-0 z-10">
+                                    <img src="static/octopus.png" alt="${room.name}" class="w-full h-full object-cover">
+                                </div>
+                            `;
+                        }
+
+                        // Navigation buttons (if multiple images exist)
+                        const navButtonsHtml = imagesList.length > 1 ? `
+                            <button onclick="prevItem(event)" class="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/75 text-white p-2 rounded-full z-20 opacity-0 group-hover:opacity-100 transition">
+                                <i class="fa-solid fa-chevron-left text-xs"></i>
+                            </button>
+                            <button onclick="nextItem(event)" class="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/75 text-white p-2 rounded-full z-20 opacity-0 group-hover:opacity-100 transition">
+                                <i class="fa-solid fa-chevron-right text-xs"></i>
+                            </button>
+                            <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex space-x-1.5 z-20">
+                                ${dotsHtml}
+                            </div>
+                        ` : '';
+
+                        // Build Card HTML
+                        const card = document.createElement('div');
+                        card.className = "bg-white rounded-2xl shadow-md overflow-hidden border border-slate-100 grid grid-cols-1 lg:grid-cols-3 hover:shadow-lg transition";
+                        card.setAttribute('data-room-carousel', roomLoopIndex);
+
+                        card.innerHTML = `
+                            <div class="relative h-64 lg:h-auto bg-slate-900 overflow-hidden group">
+                                ${slidesHtml}
+                                <div class="absolute top-4 left-4 bg-slate-900/80 backdrop-blur text-white text-xs font-semibold px-3 py-1.5 rounded-full z-20">
+                                    Max Guests: ${room.capacity || 2}
+                                </div>
+                                ${navButtonsHtml}
+                            </div>
+
+                            <div class="lg:col-span-2 p-8 flex flex-col justify-between space-y-6">
+                                <div class="space-y-4">
+                                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
+                                        <h2 class="text-2xl font-serif font-bold text-slate-900">${room.name}</h2>
+                                        <div class="text-emerald-700 font-serif font-bold text-2xl">
+                                            £${room.price} <span class="text-xs font-sans text-slate-500 font-normal">/ night</span>
+                                        </div>
+                                    </div>
+
+                                    <p class="text-slate-600 text-sm leading-relaxed">
+                                        ${description}
+                                    </p>
+
+                                    <div class="flex flex-wrap gap-2 pt-2">
+                                        <span class="bg-slate-100 text-slate-700 text-xs px-3 py-1 rounded-full flex items-center"><i class="fa-solid fa-wifi mr-1.5 text-emerald-600"></i> Free Wi-Fi</span>
+                                        <span class="bg-slate-100 text-slate-700 text-xs px-3 py-1 rounded-full flex items-center"><i class="fa-solid fa-mug-hot mr-1.5 text-emerald-600"></i> Breakfast Included</span>
+                                        <span class="bg-slate-100 text-slate-700 text-xs px-3 py-1 rounded-full flex items-center"><i class="fa-solid fa-car mr-1.5 text-emerald-600"></i> Free Parking</span>
+                                        <span class="bg-slate-100 text-slate-700 text-xs px-3 py-1 rounded-full flex items-center"><i class="fa-solid fa-mountain-sun mr-1.5 text-emerald-600"></i> Valley Views</span>
+                                    </div>
+                                </div>
+
+                                <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
+                                    <div class="text-xs text-slate-500 space-y-1">
+                                        <p><i class="fa-regular fa-clock mr-1"></i> Check-in: 3:00 PM - 9:00 PM</p>
+                                        <p><i class="fa-solid fa-shield-heart mr-1"></i> Best Rate Guaranteed on Direct Booking</p>
+                                    </div>
+                                    <a href="booking.html?room=${encodeURIComponent(roomIdClean)}" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-6 py-2.5 rounded-lg shadow transition text-sm inline-block">
+                                        Book This Room
+                                    </a>
+                                </div>
+                            </div>
+                        `;
+
+                        container.appendChild(card);
+                    });
+                },
+                error: function(err) {
+                    document.getElementById('rooms-container').innerHTML = '<p class="text-center text-red-500">Error loading rooms from CSV.</p>';
+                }
+            });
+        }
+
+        // Carousel Slider Controls
+        function showSlide(roomIndex, slideIndex) {
+            if (slideIndices[roomIndex] === undefined) slideIndices[roomIndex] = 0;
+            
+            const card = document.querySelector(`[data-room-carousel="${roomIndex}"]`);
+            if (!card) return;
+
+            const slides = card.querySelectorAll(`[class*="carousel-slide-${roomIndex}-"]`);
+            const dots = card.querySelectorAll(`[class*="dot-${roomIndex}-"]`);
+
+            if (slides.length === 0) return;
+
+            if (slideIndex >= slides.length) slideIndices[roomIndex] = 0;
+            else if (slideIndex < 0) slideIndices[roomIndex] = slides.length - 1;
+            else slideIndices[roomIndex] = slideIndex;
+
+            const current = slideIndices[roomIndex];
+
+            slides.forEach((slide, idx) => {
+                if (idx === current) {
+                    slide.classList.remove('opacity-0', 'z-0');
+                    slide.classList.add('opacity-100', 'z-10');
+                } else {
+                    slide.classList.remove('opacity-100', 'z-10');
+                    slide.classList.add('opacity-0', 'z-0');
+                }
+            });
+
+            dots.forEach((dot, idx) => {
+                if (idx === current) {
+                    dot.classList.add('bg-white', 'w-4');
+                    dot.classList.remove('bg-white/60', 'w-2');
+                } else {
+                    dot.classList.remove('bg-white', 'w-4');
+                    dot.classList.add('bg-white/60', 'w-2');
+                }
+            });
+        }
+
+        function nextItem(event) {
+            event.stopPropagation();
+            const card = event.target.closest('[data-room-carousel]');
+            const roomIndex = card.getAttribute('data-room-carousel');
+            showSlide(roomIndex, (slideIndices[roomIndex] || 0) + 1);
+        }
+
+        function prevItem(event) {
+            event.stopPropagation();
+            const card = event.target.closest('[data-room-carousel]');
+            const roomIndex = card.getAttribute('data-room-carousel');
+            showSlide(roomIndex, (slideIndices[roomIndex] || 0) - 1);
+        }
+
+        window.addEventListener('DOMContentLoaded', loadRooms);
+    </script>
+</body>
+</html>

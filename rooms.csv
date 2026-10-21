@@ -1,0 +1,5 @@
+id,name,price,capacity,images,ical_url
+room1,Double room (room 1),1000,2,"room1_1.png, room1_2.png, room1_3.png",
+Room 2,Twin room (Room 2),1000,2,"room2_1.png, room2_2.png",
+Room3,Double room (room 3),1000,2,"room3_1.png, room3_2.png",
+Room4,Double room (room 4),1000,2,"room4_1.png, room4_2.png",

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guest Reviews | Borthwen B&B Dolgellau</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- PapaParse Library to read reviews.csv in the browser -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        .font-serif { font-family: 'Playfair Display', Georgia, serif; }
+    </style>
+</head>
+<body class="bg-[#F8F9FA] text-[#0F172A] font-sans antialiased min-h-screen flex flex-col justify-between">
+
+    <!-- Navigation -->
+    <nav class="bg-slate-900 text-white sticky top-0 z-50 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <a href="index.html" class="text-2xl font-serif font-bold tracking-wider">
+                BORTHWEN <span class="text-emerald-400 text-sm font-sans block tracking-widest uppercase">Dolgellau, Wales</span>
+            </a>
+            <div class="hidden md:flex space-x-8 items-center text-sm font-medium">
+                <a href="index.html" class="hover:text-emerald-400 transition">Home</a>
+                <a href="rooms.html" class="hover:text-emerald-400 transition">Rooms & Rates</a>
+                <a href="nearby.html" class="hover:text-emerald-400 transition">What's Nearby</a>
+                <a href="reviews.html" class="text-emerald-400 font-semibold transition">Reviews</a>
+                <a href="contact.html" class="hover:text-emerald-400 transition">Contact</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    
+    <header class="bg-slate-900 text-white py-20 px-4">
+        <div class="max-w-4xl mx-auto text-center space-y-4">
+            <h1 class="text-4xl md:text-5xl font-serif font-bold tracking-wide">Guest Reviews</h1>
+            <p class="text-slate-300 max-w-xl mx-auto">
+                Read what our wonderful guests have to say about their stay at Borthwen B&B in southern Snowdonia.
+            </p>
+        </div>
+    </header>
+    <div class="flex-grow">
+
+    <main class="max-w-7xl mx-auto px-4 py-16 space-y-12">    
+        <!-- Curated Reviews Grid Section (Populated dynamically from reviews.csv) -->
+        <div id="reviews-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Loading indicator -->
+            <div id="loading" class="col-span-full text-center py-12 text-slate-500">
+                <i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i>
+                <p>Loading guest reviews...</p>
+            </div>
+        </div>
+
+        <!-- Call to Action Banner -->
+        <div class="mt-16 bg-slate-50 border border-slate-200 rounded-2xl p-8 text-center space-y-4 max-w-3xl mx-auto">
+            <h3 class="text-2xl font-serif font-bold text-slate-900">Stayed with us recently?</h3>
+            <p class="text-slate-600 text-sm">
+                We would love to hear about your experience. Feel free to leave us a review!
+            </p>
+            </div>
+        </div>
+    </main>
+    </div>
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 py-12 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8 text-sm">
+            <div>
+                <h3 class="text-white font-serif text-lg mb-3">Borthwen B&B</h3>
+                <p>Cader Road, Dolgellau, Wales, United Kingdom LL40 1SG</p>
+                <p class="mt-2">Phone: +44 792 80 41057</p>
+                <p>Email: borthwenbnb@gmail.com</p>
+            </div>
+            <div>
+                <h3 class="text-white font-serif text-lg mb-3">Quick Links</h3>
+                <ul class="space-y-2">
+                    <li><a href="rooms.html" class="hover:text-white">Our Rooms</a></li>
+                    <li><a href="booking.html" class="hover:text-white">Check Availability</a></li>
+                    <li><a href="nearby.html" class="hover:text-white">Explore Snowdonia</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 mt-8 pt-6 border-t border-slate-800 text-center text-xs">
+            &copy; 2026 Borthwen B&B. All rights reserved.
+        </div>
+    </footer>
+
+    <!-- Script to Load and Parse CSV -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            Papa.parse('reviews.csv', {
+                download: true,
+                header: true,
+                complete: function(results) {
+                    const grid = document.getElementById('reviews-grid');
+                    grid.innerHTML = ''; // Clear loading indicator
+
+                    results.data.forEach(review => {
+                        if (!review.author || !review.text) return; // Skip empty rows
+
+                        const ratingNum = parseInt(review.rating) || 5;
+                        let starsHtml = '';
+                        for (let i = 0; i < ratingNum; i++) {
+                            starsHtml += `<i class="fa-solid fa-star text-sm"></i>`;
+                        }
+
+                        const card = document.createElement('div');
+                        card.className = "bg-white rounded-xl shadow-md p-8 flex flex-col justify-between border border-slate-100 hover:shadow-lg transition";
+                        card.innerHTML = `
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex text-amber-400 space-x-1">
+                                        ${starsHtml}
+                                    </div>
+                                    <span class="bg-slate-100 text-slate-700 text-xs font-semibold px-2.5 py-1 rounded-full">
+                                        ${review.source || 'Borthwen B&B'}
+                                    </span>
+                                </div>
+                                <p class="text-slate-600 text-sm leading-relaxed italic">
+                                    "${review.text}"
+                                </p>
+                            </div>
+                            <div class="pt-6 mt-6 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                                <div>
+                                    <p class="font-serif font-bold text-slate-900 text-sm">${review.author}</p>
+                                    <p>${review.location || ''}</p>
+                                </div>
+                                <div class="text-right">
+                                    <p>${review.date || ''}</p>
+                                </div>
+                            </div>
+                        `;
+                        grid.appendChild(card);
+                    });
+                },
+                error: function(err) {
+                    document.getElementById('reviews-grid').innerHTML = `
+                        <p class="col-span-full text-center text-red-500">Error loading reviews.</p>
+                    `;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Your Stay | Borthwen B&B</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- PapaParse Library to read rooms.csv in the browser -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        .font-serif { font-family: 'Playfair Display', Georgia, serif; }
+    </style>
+</head>
+<body class="bg-[#F8F9FA] text-[#0F172A] font-sans antialiased min-h-screen flex flex-col justify-between">
+
+    <!-- Navigation -->
+    <nav class="bg-slate-900 text-white sticky top-0 z-50 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <a href="index.html" class="text-2xl font-serif font-bold tracking-wider">
+                BORTHWEN <span class="text-emerald-400 text-sm font-sans block tracking-widest uppercase">Dolgellau, Wales</span>
+            </a>
+            <div class="hidden md:flex space-x-8 items-center text-sm font-medium">
+                <a href="index.html" class="hover:text-emerald-400 transition">Home</a>
+                <a href="rooms.html" class="hover:text-emerald-400 transition">Rooms & Rates</a>
+                <a href="nearby.html" class="hover:text-emerald-400 transition">What's Nearby</a>
+                <a href="reviews.html" class="hover:text-emerald-400 transition">Reviews</a>
+                <a href="contact.html" class="hover:text-emerald-400 transition">Contact</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="flex-grow">
+    <div class="max-w-5xl mx-auto px-4 py-16">
+        <h1 class="text-3xl font-serif font-bold mb-2">Book Your Stay</h1>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Room Selector & Form -->
+            <div class="md:col-span-2 bg-white p-6 rounded-xl shadow-md space-y-6">
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Select Room / Suite</label>
+                    <select id="roomSelect" class="w-full border rounded-lg p-3 bg-slate-50">
+                        <option value="">Loading rooms...</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Check-in Date</label>
+                        <input type="date" id="checkIn" class="w-full border rounded-lg p-3 bg-slate-50">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Check-out Date</label>
+                        <input type="date" id="checkOut" class="w-full border rounded-lg p-3 bg-slate-50">
+                    </div>
+                </div>
+
+                <div id="syncWarning" class="hidden bg-amber-50 border-l-4 border-amber-500 p-4 text-xs text-amber-700">
+                    <i class="fa-solid fa-triangle-exclamation mr-1"></i> Some dates in your selected range are unavailable.
+                </div>
+
+                <a href="https://www.booking.com" target="_blank" rel="noopener noreferrer" class="block text-center w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 rounded-lg shadow transition">
+                    Proceed to Secure Checkout
+                </a>
+            </div>
+
+            <!-- Summary Card -->
+            <div class="bg-slate-900 text-white p-6 rounded-xl shadow-md h-fit space-y-4">
+                <h3 class="text-lg font-serif font-bold border-b border-slate-800 pb-3">Price Summary</h3>
+                <div class="flex justify-between text-sm text-slate-300">
+                    <span id="nightCount">1 night</span>
+                    <span id="basePrice">£0</span>
+                </div>
+                <div class="flex justify-between text-sm text-slate-300">
+                    <span>Breakfast</span>
+                    <span>Included</span>
+                </div>
+                <div class="border-t border-slate-800 pt-3 flex justify-between font-bold text-lg">
+                    <span>Total</span>
+                    <span id="totalPrice" class="text-emerald-400">£0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 py-12 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8 text-sm">
+            <div>
+                <h3 class="text-white font-serif text-lg mb-3">Borthwen B&B</h3>
+                <p>Cader Road, Dolgellau, Wales, United Kingdom LL40 1SG</p>
+                <p class="mt-2">Phone: +44 792 80 41057</p>
+                <p>Email: borthwenbnb@gmail.com</p>
+            </div>
+            <div>
+                <h3 class="text-white font-serif text-lg mb-3">Quick Links</h3>
+                <ul class="space-y-2">
+                    <li><a href="rooms.html" class="hover:text-white">Our Rooms</a></li>
+                    <li><a href="nearby.html" class="hover:text-white">Explore Snowdonia</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 mt-8 pt-6 border-t border-slate-800 text-center text-xs">
+            &copy; 2026 Borthwen B&B. All rights reserved.
+        </div>
+    </footer>
+
+    <!-- Calculator & CSV Loader Script -->
+    <script>
+        // Set default dates (Check-in = today, Check-out = tomorrow)
+        function setDefaultDates() {
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+
+            document.getElementById('checkIn').value = today.toISOString().split('T')[0];
+            document.getElementById('checkOut').value = tomorrow.toISOString().split('T')[0];
+        }
+
+        // Auto-select room based on URL parameter (?room=Room3 or ?room=room1)
+        function initSelectedRoom() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const roomParam = urlParams.get('room');
+            if (roomParam) {
+                const roomSelect = document.getElementById('roomSelect');
+                const targetRoom = decodeURIComponent(roomParam).trim().toLowerCase();
+                
+                for (let option of roomSelect.options) {
+                    if (option.value.trim().toLowerCase() === targetRoom) {
+                        roomSelect.value = option.value;
+                        break;
+                    }
+                }
+            }
+            updateCalc();
+        }
+
+        function loadRoomsFromCSV() {
+            Papa.parse('rooms.csv', {
+                download: true,
+                header: true,
+                complete: function(results) {
+                    const roomSelect = document.getElementById('roomSelect');
+                    roomSelect.innerHTML = ''; // Clear loading text
+
+                    results.data.forEach(room => {
+                        if (!room.id || !room.name) return;
+
+                        const option = document.createElement('option');
+                        option.value = room.id.trim();
+                        option.dataset.price = room.price;
+                        option.text = `${room.name.trim()} - £${room.price}/night`;
+                        roomSelect.appendChild(option);
+                    });
+
+                    // Match selection from query string after dropdown populates
+                    initSelectedRoom();
+                },
+                error: function(err) {
+                    document.getElementById('roomSelect').innerHTML = '<option value="">Error loading rooms</option>';
+                }
+            });
+        }
+
+        document.getElementById('roomSelect').addEventListener('change', updateCalc);
+        document.getElementById('checkIn').addEventListener('change', updateCalc);
+        document.getElementById('checkOut').addEventListener('change', updateCalc);
+
+        function updateCalc() {
+            const inDateVal = document.getElementById('checkIn').value;
+            const outDateVal = document.getElementById('checkOut').value;
+            const roomSelect = document.getElementById('roomSelect');
+            const selectedOption = roomSelect.selectedOptions[0];
+            
+            if (!selectedOption || !selectedOption.dataset.price) return;
+            const pricePerNight = parseInt(selectedOption.dataset.price);
+
+            if (inDateVal && outDateVal) {
+                const inDate = new Date(inDateVal);
+                const outDate = new Date(outDateVal);
+
+                if (outDate > inDate) {
+                    const diffTime = Math.abs(outDate - inDate);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    
+                    document.getElementById('nightCount').innerText = `${diffDays} night${diffDays > 1 ? 's' : ''}`;
+                    const total = diffDays * pricePerNight;
+                    document.getElementById('basePrice').innerText = `£${total}`;
+                    document.getElementById('totalPrice').innerText = `£${total}`;
+                } else {
+                    document.getElementById('nightCount').innerText = `0 nights`;
+                    document.getElementById('basePrice').innerText = `£0`;
+                    document.getElementById('totalPrice').innerText = `£0`;
+                }
+            }
+        }
+
+        // Initialize on DOM ready
+        window.addEventListener('DOMContentLoaded', () => {
+            setDefaultDates();
+            loadRoomsFromCSV();
+        });
+    </script>
+</body>
+</html>
