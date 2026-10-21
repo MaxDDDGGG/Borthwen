@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block content %}
+<!-- Page Header -->
+<header class="bg-slate-900 text-white py-20 px-4">
+    <div class="max-w-4xl mx-auto text-center space-y-4">
+        <h1 class="text-4xl md:text-5xl font-serif font-bold tracking-wide">Our Rooms & Suites</h1>
+        <p class="text-slate-300 max-w-xl mx-auto">
+            Comfortable, elegantly appointed rooms with stunning views of the Mawddach Valley and Cadair Idris.
+        </p>
+    </div>
+</header>
+
+<!-- Rooms List Section -->
+<main class="max-w-7xl mx-auto px-4 py-16 space-y-12">
+
+    {% for key, room in rooms.items() %}
+    {% set room_loop_index = loop.index0 %}
+    <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-slate-100 grid grid-cols-1 lg:grid-cols-3 hover:shadow-lg transition" 
+        data-room-carousel="{{ room_loop_index }}">
+        
+        <!-- Room Image Carousel Container -->
+        <div class="relative h-64 lg:h-auto bg-slate-900 overflow-hidden group">
+            {% for img in room.images %}
+            {% set img_loop_index = loop.index0 %}
+            <div class="absolute inset-0 transition-opacity duration-500 ease-in-out carousel-slide-{{ room_loop_index }}-{{ img_loop_index }} {% if loop.first %}opacity-100 z-10{% else %}opacity-0 z-0{% endif %}">
+                <img src="{{ url_for('static', filename='rooms/' + img) }}" 
+                    alt="{{ room.name }}" 
+                    class="w-full h-full object-cover"
+                    onerror="this.src='{{ url_for('static', filename='octopus.png') }}'">
+            </div>
+            {% endfor %}
+
+            <!-- Max Guests Badge -->
+            <div class="absolute top-4 left-4 bg-slate-900/80 backdrop-blur text-white text-xs font-semibold px-3 py-1.5 rounded-full z-20">
+                Max Guests: {{ room.capacity }}
+            </div>
+
+            {% if room.images | length > 1 %}
+            <!-- Carousel Navigation Buttons -->
+            <button onclick="prevItem(event)" 
+                    class="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/75 text-white p-2 rounded-full z-20 opacity-0 group-hover:opacity-100 transition">
+                <i class="fa-solid fa-chevron-left text-xs"></i>
+            </button>
+            <button onclick="nextItem(event)" 
+                    class="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/75 text-white p-2 rounded-full z-20 opacity-0 group-hover:opacity-100 transition">
+                <i class="fa-solid fa-chevron-right text-xs"></i>
+            </button>
+            
+            <!-- Slide Indicator Dots -->
+            <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex space-x-1.5 z-20">
+                {% for img in room.images %}
+                <span class="w-2 h-2 rounded-full bg-white/60 dot-{{ room_loop_index }}-{{ loop.index0 }} {% if loop.first %}bg-white w-4{% endif %} transition-all"></span>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Room Details -->
+        <div class="lg:col-span-2 p-8 flex flex-col justify-between space-y-6">
+            <div class="space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
+                    <h2 class="text-2xl font-serif font-bold text-slate-900">{{ room.name }}</h2>
+                    <div class="text-emerald-700 font-serif font-bold text-2xl">
+                        £{{ room.price }} <span class="text-xs font-sans text-slate-500 font-normal">/ night</span>
+                    </div>
+                </div>
+
+                <p class="text-slate-600 text-sm leading-relaxed">
+                    {% if 'twin' in room.name | lower %}
+                    A cosy, beautifully decorated twin room ideally suited for walkers and friends exploring the Cader Idris trails and Coed y Brenin forests, complete with comfortable single beds and modern amenities.
+                    {% else %}
+                    A tranquil double room offering wonderful natural light and relaxing comforts. Features a plush double bed, crisp linens, ensuite facilities, and artisan tea/coffee service.
+                    {% endif %}
+                </p>
+
+                <!-- Amenities Badges -->
+                <div class="flex flex-wrap gap-2 pt-2">
+                    <span class="bg-slate-100 text-slate-700 text-xs px-3 py-1 rounded-full flex items-center"><i class="fa-solid fa-wifi mr-1.5 text-emerald-600"></i> Free Wi-Fi</span>
+                    <span class="bg-slate-100 text-slate-700 text-xs px-3 py-1 rounded-full flex items-center"><i class="fa-solid fa-mug-hot mr-1.5 text-emerald-600"></i> Welsh Breakfast Included</span>
+                    <span class="bg-slate-100 text-slate-700 text-xs px-3 py-1 rounded-full flex items-center"><i class="fa-solid fa-car mr-1.5 text-emerald-600"></i> Free Parking</span>
+                    <span class="bg-slate-100 text-slate-700 text-xs px-3 py-1 rounded-full flex items-center"><i class="fa-solid fa-mountain-sun mr-1.5 text-emerald-600"></i> Valley Views</span>
+                </div>
+            </div>
+
+            <!-- Action / Booking Footer -->
+            <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
+                <div class="text-xs text-slate-500 space-y-1">
+                    <p><i class="fa-regular fa-clock mr-1"></i> Check-in: 3:00 PM - 9:00 PM</p>
+                    <p><i class="fa-solid fa-shield-heart mr-1"></i> Best Rate Guaranteed on Direct Booking</p>
+                </div>
+                <a href="/booking?room={{ key }}" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-6 py-2.5 rounded-lg shadow transition text-sm inline-block">
+                    Book This Room
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+</main>
+
+<!-- Carousel Script -->
+<script>
+    const slideIndices = {};
+
+    function showSlide(roomIndex, slideIndex) {
+        if (slideIndices[roomIndex] === undefined) slideIndices[roomIndex] = 0;
+        
+        const card = document.querySelector(`[data-room-carousel="${roomIndex}"]`);
+        const slides = card.querySelectorAll(`[class*="carousel-slide-${roomIndex}-"]`);
+        const dots = card.querySelectorAll(`[class*="dot-${roomIndex}-"]`);
+
+        if (slides.length === 0) return;
+
+        if (slideIndex >= slides.length) slideIndices[roomIndex] = 0;
+        else if (slideIndex < 0) slideIndices[roomIndex] = slides.length - 1;
+        else slideIndices[roomIndex] = slideIndex;
+
+        const current = slideIndices[roomIndex];
+
+        slides.forEach((slide, idx) => {
+            if (idx === current) {
+                slide.classList.remove('opacity-0', 'z-0');
+                slide.classList.add('opacity-100', 'z-10');
+            } else {
+                slide.classList.remove('opacity-100', 'z-10');
+                slide.classList.add('opacity-0', 'z-0');
+            }
+        });
+
+        dots.forEach((dot, idx) => {
+            if (idx === current) {
+                dot.classList.add('bg-white', 'w-4');
+                dot.classList.remove('bg-white/60', 'w-2');
+            } else {
+                dot.classList.remove('bg-white', 'w-4');
+                dot.classList.add('bg-white/60', 'w-2');
+            }
+        });
+    }
+
+    function nextItem(event) {
+        event.stopPropagation();
+        const card = event.target.closest('[data-room-carousel]');
+        const roomIndex = card.getAttribute('data-room-carousel');
+        showSlide(roomIndex, (slideIndices[roomIndex] || 0) + 1);
+    }
+
+    function prevItem(event) {
+        event.stopPropagation();
+        const card = event.target.closest('[data-room-carousel]');
+        const roomIndex = card.getAttribute('data-room-carousel');
+        showSlide(roomIndex, (slideIndices[roomIndex] || 0) - 1);
+    }
+</script>
+{% endblock %}
